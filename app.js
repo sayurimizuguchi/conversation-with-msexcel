@@ -26,6 +26,7 @@ var watson = require( 'watson-developer-cloud' );  // watson sdk
 var uuid = require( 'uuid' );
 var vcapServices = require( 'vcap_services' );
 var basicAuth = require( 'basic-auth-connect' );
+var http = require( 'http' );
 
 // The app owner may optionally configure a cloudand db to track user input.
 // This cloudand db is not required, the app will operate without it.
@@ -85,51 +86,67 @@ app.post( '/api/message', function(req, res) {
     if ( err ) {
       return res.status( err.code || 500 ).json( err );
     }
-    return res.json( updateMessage( payload, data ) );
+    updateMessage( res, payload, data );
   } );
 } );
 
 /**
  * Updates the response text using the intent confidence
+ * @param  {Object} res The node.js http response object
  * @param  {Object} input The request to the Conversation service
  * @param  {Object} response The response from the Conversation service
  * @return {Object}          The response with the updated message
  */
-function updateMessage(input, response) {
-  var responseText = null;
-  var id = null;
+function updateMessage(res, input, response) {
   if ( !response.output ) {
     response.output = {};
-  } else {
-    if ( logs ) {
-      // If the logs db is set, then we want to record all input and responses
-      id = uuid.v4();
-      logs.insert( {'_id': id, 'request': input, 'response': response, 'time': new Date()});
-    }
-    return response;
+  } else if ( checkWeather( response ) ) {
+    var path = getLocationURL( response.context.long, response.context.lat );
+
+    var options = {
+      host: 'api.wunderground.com',
+      path: path
+    };
+
+    http.get( options, function(resp) {
+      var chunkText = '';
+      resp.on( 'data', function(chunk) {
+        chunkText += chunk.toString( 'utf8' );
+      } );
+      resp.on( 'end', function() {
+        var chunkJSON = JSON.parse( chunkText );
+        var params = [];
+        if ( chunkJSON.location ) {
+          var when = response.entities[0].value;
+          params.push( chunkJSON.location.city );
+          var forecast = null;
+          if ( when === 'today' ) {
+            forecast = chunkJSON.forecast.txt_forecast.forecastday[0].fcttext;
+          } else if ( when === 'tomorrow' ) {
+            forecast = chunkJSON.forecast.txt_forecast.forecastday[3].fcttext;
+          }
+          params.push( forecast );
+
+          response.output.text = replaceParams( response.output.text, params );
+        }
+        log( input, response );
+        return res.json( response );
+      } );
+    } ).on( 'error', function(e) {
+      console.log( 'failure!' );
+      console.log( e );
+    } );
+  } else if ( response.output && response.output.text ) {
+    return res.json( response );
   }
-  if ( response.intents && response.intents[0] ) {
-    var intent = response.intents[0];
-    // Depending on the confidence of the response the app can return different messages.
-    // The confidence will vary depending on how well the system is trained. The service will always try to assign
-    // a class/intent to the input. If the confidence is low, then it suggests the service is unsure of the
-    // user's intent . In these cases it is usually best to return a disambiguation message
-    // ('I did not understand your intent, please rephrase your question', etc..)
-    if ( intent.confidence >= 0.75 ) {
-      responseText = 'I understood your intent was ' + intent.intent;
-    } else if ( intent.confidence >= 0.5 ) {
-      responseText = 'I think your intent was ' + intent.intent;
-    } else {
-      responseText = 'I did not understand your intent';
-    }
-  }
-  response.output.text = responseText;
+}
+
+function log(input, output) {
   if ( logs ) {
     // If the logs db is set, then we want to record all input and responses
-    id = uuid.v4();
-    logs.insert( {'_id': id, 'request': input, 'response': response, 'time': new Date()});
+    var id = uuid.v4();
+    logs.insert( {'_id': id, 'request': input, 'response': output, 'time': new Date()} );
   }
-  return response;
 }
 
 if ( cloudantUrl ) {
@@ -145,9 +162,9 @@ if ( cloudantUrl ) {
   // add a new API which allows us to retrieve the logs (note this is not secure)
   nano.db.get( 'car_logs', function(err) {
     if ( err ) {
-      console.error(err);
+      console.error( err );
       nano.db.create( 'car_logs', function(errCreate) {
-        console.error(errCreate);
+        console.error( errCreate );
         logs = nano.db.use( 'car_logs' );
       } );
     } else {
@@ -168,7 +185,7 @@ if ( cloudantUrl ) {
   // Endpoint which allows conversation logs to be fetched
   app.get( '/chats', auth, function(req, res) {
     logs.list( {include_docs: true, 'descending': true}, function(err, body) {
-      console.error(err);
+      console.error( err );
       // download as CSV
       var csv = [];
       csv.push( ['Question', 'Intent', 'Confidence', 'Entity', 'Output', 'Time'] );
@@ -180,10 +197,10 @@ if ( cloudantUrl ) {
           var t2 = date2.getTime();
           var aGreaterThanB = t1 > t2;
           var equal = t1 === t2;
-          if (aGreaterThanB) {
+          if ( aGreaterThanB ) {
             return 1;
           }
-          return  equal ? 0 : -1;
+          return equal ? 0 : -1;
         }
       } );
       body.rows.forEach( function(row) {
@@ -220,6 +237,30 @@ if ( cloudantUrl ) {
       res.csv( csv );
     } );
   } );
+}
+
+function checkWeather(data) {
+  return data.intents && data.intents.length > 0 && data.intents[0].intent === 'weather'
+    && data.entities && data.entities.length > 0 && data.entities[0].entity === 'day';
+}
+
+function replaceParams(original, args) {
+  if ( original && args ) {
+    var text = original.join( ' ' ).replace( /{(\d+)}/g, function(match, number) {
+      return typeof args[number] !== 'undefined'
+        ? args[number]
+        : match
+        ;
+    } );
+    return [text];
+  }
+  return original;
+}
+
+function getLocationURL(lat, long) {
+  if ( lat !== null && long !== null ) {
+    return '/api/' + process.env.WEATHER_KEY + '/geolookup/forecast/q/' + long + ',' + lat + '.json';
+  }
 }
 
 module.exports = app;
