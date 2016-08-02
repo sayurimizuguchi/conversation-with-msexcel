@@ -1,6 +1,4 @@
 # Conversation Sample Application
-[![Build Status](https://travis-ci.org/watson-developer-cloud/conversation-simple.svg?branch=master)](http://travis-ci.org/watson-developer-cloud/conversation-simple)
-[![codecov.io](https://codecov.io/github/watson-developer-cloud/conversation-simple/coverage.svg?branch=master)](https://codecov.io/github/watson-developer-cloud/conversation-simple?branch=master)
 
 This application demonstrates how the Conversation service uses intent capabilities in a simple chat interface. The application also shows how to integrate to external services 
 based on intent and entity values (#weather && @day).
@@ -49,7 +47,7 @@ understands that in both cases your intent is the same and responds accordingly.
 ## Deploy the App
 1 Select Deploy to Bluemix.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/watson-developer-cloud/conversation-simple)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [![Deploy to Bluemix](https://bluemix.net/deploy/button.png)](https://bluemix.net/deploy?repository=https://github.com/doconnor78/conversation-simple-weather)
 
 2 Log in with an existing Bluemix account or sign up.
 
@@ -95,9 +93,9 @@ To build the application:
 
 1 Download and install the [Cloudfoundry CLI](https://github.com/cloudfoundry/cli) tool.
 
-2 Git clone the project `https://github.com/watson-developer-cloud/conversation-simple`
+2 Git clone the project `https://github.com/doconnor78/conversation-simple-weather`
 
-3 Navigate to the `conversation-simple` folder
+3 Navigate to the `conversation-simple-weather` folder
 
 4 Edit the `manifest.yml` file, and change the `<application-name>` to something unique.
   ```none
@@ -182,7 +180,7 @@ For more information on workspaces, see the full  [Conversation service  documen
 
 2 Go to the **Manage** menu item and select **Launch Tool**. This opens a new tab in your browser, where you are prompted to login if you have not done so before. Use your Bluemix credentials.
 
-3 If you are deploying through Bluemix, download the [exported JSON file](https://raw.githubusercontent.com/watson-developer-cloud/conversation-simple/master/training/car_workspace.json) that contains the Workspace contents. If deploying locally,  this was cloned and is in the training folder (training/car_workspace.json).
+3 If you are deploying through Bluemix, download the [exported JSON file](https://raw.githubusercontent.com/doconnor78/conversation-simple-weather/master/training/car_weather_workspace.json) that contains the Workspace contents. If deploying locally,  this was cloned and is in the training folder (training/car_workspace.json).
 
 4 Select the import icon: ![](readme_images/importGA.PNG). Browse to (or drag and drop) the JSON file. Choose to import **Everything(Intents, Entities, and Dialog)**. Then select **Import** to finish importing the workspace.
 
