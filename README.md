@@ -2,9 +2,9 @@
 [![Build Status](https://travis-ci.org/watson-developer-cloud/conversation-simple.svg?branch=master)](http://travis-ci.org/watson-developer-cloud/conversation-simple)
 [![codecov.io](https://codecov.io/github/watson-developer-cloud/conversation-simple/coverage.svg?branch=master)](https://codecov.io/github/watson-developer-cloud/conversation-simple?branch=master)
 
-This application demonstrates how the Conversation service uses intent capabilities in a simple chat interface.
+This application demonstrates how the Conversation service uses intent capabilities in a simple chat interface. The application also shows how to integrate to external services 
+based on intent and entity values (#weather && @day).
 
-[See the app demo](http://conversation-simple.mybluemix.net/).
 
 For more information about Conversation, see the [detailed documentation](http://www.ibm.com/watson/developercloud/doc/conversation/overview.shtml).
 
@@ -141,19 +141,21 @@ To build the application:
 
 2 Use the Conversation tooling app to [import a workspace](#workspace) and add the workspace ID environment variable to the `.env` file. For details about obtaining the workspace ID, see Step 5 in the workspace section.
 
-3 Install [Node.js](http://nodejs.org/).
+3 Obtain an API key for [The Weather Channel API] (https://www.wunderground.com/weather/api/). Add the key to the .env file `WEATHER_KEY=<YOUR_KEY>`
 
-4 Open the terminal, go to the project folder, and run this command:
+4 Install [Node.js](http://nodejs.org/).
+
+5 Open the terminal, go to the project folder, and run this command:
     ```
     npm install
     ```
 
-5  Start the application by running this command:
+6  Start the application by running this command:
     ```
     npm start
     ```
 
-6 Open `http://localhost:3000` in a browser.
+7 Open `http://localhost:3000` in a browser.
 
 <a name="credentials">
 # Service Credentials
