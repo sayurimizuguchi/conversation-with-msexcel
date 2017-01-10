@@ -117,15 +117,12 @@ function updateMessage(res, input, response) {
         var chunkJSON = JSON.parse( chunkText );
         var params = [];
         if ( chunkJSON.location ) {
-          var when = response.entities[0].value;
           params.push( chunkJSON.location.city );
-          var forecast = null;
-          if ( when === 'today' ) {
-            forecast = chunkJSON.forecast.txt_forecast.forecastday[0].fcttext;
-          } else if ( when === 'tomorrow' ) {
-            forecast = chunkJSON.forecast.txt_forecast.forecastday[3].fcttext;
-          }
-          params.push( forecast );
+          var date = new Date(response.entities[0].value).getUTCDate();
+          var now = new Date().getUTCDate();
+          var when = date - now;
+          //day after tomorrow
+          params.push(chunkJSON.forecast.txt_forecast.forecastday[when * 2].fcttext);
 
           response.output.text = replaceParams( response.output.text, params );
         }
@@ -241,7 +238,7 @@ if ( cloudantUrl ) {
 
 function checkWeather(data) {
   return data.intents && data.intents.length > 0 && data.intents[0].intent === 'weather'
-    && data.entities && data.entities.length > 0 && data.entities[0].entity === 'day';
+    && data.entities && data.entities.length > 0 && data.entities[0].entity === 'sys-date';
 }
 
 function replaceParams(original, args) {
@@ -259,7 +256,7 @@ function replaceParams(original, args) {
 
 function getLocationURL(lat, long) {
   if ( lat !== null && long !== null ) {
-    return '/api/' + process.env.WEATHER_KEY + '/geolookup/forecast/q/' + long + ',' + lat + '.json';
+    return '/api/' + process.env.WEATHER_KEY + '/geolookup/forecast10day/q/' + long + ',' + lat + '.json';
   }
 }
 
