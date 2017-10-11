@@ -1,6 +1,0 @@
----
-applications:
-- command: npm start
-  path: .
-  instances: 1
-  memory: 512MB
